@@ -1,0 +1,7 @@
+chromoSPA
+*.DS_Store
+*.vscode
+*.o
+*.h
+*.d
+Output/
