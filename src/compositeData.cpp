@@ -29,12 +29,14 @@ BinCounter::BinCounter(int start, int end)
 	Start = start;
 	End = end;
 	Count = 0;
+	isFinalBin = false;
 }
 BinCounter::BinCounter(int start, int end, int pop)
 {
 	Start = start;
 	End = end;
 	Count = pop;
+	isFinalBin = false;
 }
 
 VectorPair DecompileBinArray(const std::vector<BinCounter> & input)
@@ -68,4 +70,13 @@ VectorPair VectorPair::CumulativeSum()
 	}
 	p.y[p.y.size()-1]/=sum;
 	return p;
+}
+
+BreakData::BreakData(std::vector<std::string> input)
+{
+	SourceChromo = stoi(input[1]);
+	SourcePosition = stoi(input[2]);
+	BreakChromo = stoi(input[3]);
+	BreakPosition = stoi(input[4]);
+	Quality = stoi(input[5]);
 }

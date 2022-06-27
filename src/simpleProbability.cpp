@@ -39,10 +39,12 @@ namespace simplemodel
 		{
 			out[i] = AnalyticalProbability(ns[i],N,p,width);
 			double q= AnalyticalProbability(ns[i],N,p);
+			
 			s2 += q;
 			s += out[i];
 
 			out[i] *= (double)(N*p);
+	
 			// if (out[i] < 1e-1) //for plotting purposes
 			// {
 			// 	out[i]  = 0;
@@ -93,14 +95,12 @@ namespace simplemodel
 	{
 		double zeroMoment = 0;
 		double oneMoment = 0;
-
 		for (int i = 0; i < nk.size(); ++i)
 		{
 			int binStart = i*binWidth + 1;
 			zeroMoment += nk[i];
 			oneMoment += binStart * nk[i];
 		}
-
 		double pOpt = (2 * zeroMoment)/ (2 * oneMoment + (binWidth - 1) * zeroMoment);
 		double errCompute = 0;
 		for (int i = 0; i < nk.size(); ++i)
@@ -117,10 +117,11 @@ namespace simplemodel
 		double zeroMoment = 0;
 		double oneMoment = 0;
 		double binWidth = nk[0].End - nk[0].Start + 1;
-		
 		for (int i = 0; i < nk.size(); ++i)
 		{
 			int binStart = nk[i].Start;
+			int binEnd = nk[i].End;
+		
 			double idx = (binStart - 1)/binWidth;
 
 			if (!nk[i].isFinalBin)

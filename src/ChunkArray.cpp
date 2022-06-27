@@ -34,6 +34,62 @@ void ChunkArray::SyntheticInitalise(int length, double prob)
 	}
 }
 
+void ChunkArray::FileInitialise(std::string file, int chromosome, int qualityThreshold)
+{
+	//recover the total lengths of all chromosomes from file (inefficient to do every time, but only runs a few times)
+	std::vector<long int> lengths;
+	std::string lengthFiles = "Data/chromLengths.dat";
+	forLineVectorIn(lengthFiles,' ',
+		long int length = stoi(FILE_LINE_VECTOR[2]);
+		lengths.push_back(length);
+	)
+	UnbrokenLength = lengths[chromosome - 1];
+	MaximumBindex = (UnbrokenLength)/Width-1;
+	//extract all breaks associated with this chromosome
+	std::vector<BreakData> breaks;
+	forLineVectorIn(file,' ',
+		int source = stoi(FILE_LINE_VECTOR[1]);
+		int quality = stoi(FILE_LINE_VECTOR[5]);
+		if (source == chromosome && quality >= qualityThreshold)
+		{
+			breaks.push_back(BreakData(FILE_LINE_VECTOR));
+		}
+	);
+
+	//sort the breaks based on their position in the unbroken chromosome - necessary because the datafile saves them in a slightly different order
+	sort(breaks.begin(), breaks.end(), [](const BreakData  & lhs, const  BreakData & rhs) { return lhs.SourcePosition< rhs.SourcePosition;});
+
+	int mL = 0;
+
+	int prevIdx = 0;
+	for (int i = 0; i < breaks.size(); ++i)
+	{
+		int newIdx = breaks[i].SourcePosition;
+		int length = newIdx - prevIdx;
+		if (length > 0)
+		{
+			IncrementCounter(length);
+			if (length > mL)
+			{
+				mL = length;
+				// std::cout << "new max length " << mL << std::endl;
+			}
+		}
+		prevIdx = newIdx;
+	}
+	int finalLength = lengths[chromosome - 1] - prevIdx;
+	if (finalLength > 0)
+	{
+		IncrementCounter(finalLength);
+	}
+	if (finalLength > mL)
+	{
+		mL = finalLength;
+	}
+	std::cout << "\tThe largest chunk in chromosome " << chromosome << " has length " << mL << "  = " << 100*(double)mL/UnbrokenLength << "% of the total" << std::endl;
+
+}
+
 
 void ChunkArray::IncrementCounter(int length)
 {
@@ -56,6 +112,7 @@ void ChunkArray::IncrementCounter(int length)
 
 		if (bindex == MaximumBindex)
 		{
+			std::cout << length << " is in bindex " << bindex << ", max is " << MaximumBindex << std::endl;
 			Data[Data.size()-1].isFinalBin = true;
 		}
 	}
