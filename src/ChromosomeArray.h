@@ -9,24 +9,27 @@
 class ChromosomeArray
 {
 	public:
-		ChromosomeArray(int binWidth);
+		ChromosomeArray(int binWidth, int positionCounts);
 
 		void SyntheticInitalise(int genomeLength, double shatterProb);
 		void FileInitialise(std::string targetFile, int chromosome, int qualityThreshold);
 		
-		void Print();
-		void OrderedPrint();
-		double Likelihood(double p);
+
+
 		UncertainValue Optimise();
 
 		VectorPair BinCounts(bool relativeX);
 		int UnbrokenLength;
 	private:
-		std::vector<BinCounter> Data;
+		std::vector<BinCounter> SizeData;
 		std::vector<int> DataIndex;
-		int Width;
+		std::vector<int> PositionData;
+
+		int PositionBinCount;
+		int SizeBinWidth;
 		int TotalCatches;
 		int MaximumBindex;
-		
-		void IncrementCounter(int length);
+
+		void LogSize(int length);
+		void LogPosition(int pos);
 };

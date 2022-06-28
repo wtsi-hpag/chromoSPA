@@ -16,10 +16,10 @@ namespace simplemodel
 	}
 	double AnalyticalProbability(int n,int N,double p, int width)
 	{
-		JSL::Assert("Probability meaningless for lengths < 1 and > N", n > 0 && n <= N);
-		int start = n;
-
-		int endPoint = std::min(n+width,N);
+		JSL::Assert("Probability meaningless for length " + std::to_string(n), n > 0 && n <= N);
+		int bindex = n/width;
+		int start = bindex * width;
+		int endPoint = std::min(start+width,N);
 		double Q = 1.0 - p;
 
 		double prob = pow(Q,start -1) - pow(Q,endPoint - 1);
@@ -27,31 +27,63 @@ namespace simplemodel
 		{
 			prob += pow(Q,N-1);
 		}
-
+		// std::cout << n << "  " << bindex << "  " << start << "  " << prob << std::endl;
 		return prob;
 	}
 	JSL::Vector AnalyticalProbability(JSL::Vector ns,int N,double p, int width)
 	{
 		JSL::Vector out = ns;
-		double s = 0;
-		double s2 = 0;
 		for (int i = 0; i < ns.Size(); ++i)
 		{
 			out[i] = AnalyticalProbability(ns[i],N,p,width);
-			double q= AnalyticalProbability(ns[i],N,p);
+			// double q= AnalyticalProbability(ns[i],N,p);
 			
-			s2 += q;
-			s += out[i];
-
+			
 			out[i] *= (double)(N*p);
 	
-			// if (out[i] < 1e-1) //for plotting purposes
-			// {
-			// 	out[i]  = 0;
-			// }	
+		
 		}
 		return out;
 	}
+
+	JSL::Vector CumulativeProbability(JSL::Vector ns,int N,double p, int width)
+	{
+		
+		JSL::Vector out = JSL::Vector(ns.Size());
+		double s = 0;
+		double s2 = 0;
+		int previousBindex = -1;
+		for (int i = 0; i < ns.Size(); ++i)
+		{
+			
+			int bindex = round(ns[i] / width);
+			// std::cout << "New loop for length " << ns[i] << "  " << bindex << std::endl;
+			if (i > 0)
+			{
+				out[i] = out[i-1];
+			
+			}
+			if (bindex > previousBindex)
+			{
+				// std::cout << "am here" << std::endl;
+				int tmp_bindex = previousBindex + 1;
+				// std::cout << tmp_bindex << "  " << bindex << std::endl;
+				while (tmp_bindex <= bindex)
+				{
+					int start = std::max(1,tmp_bindex * width);
+					out[i] += AnalyticalProbability(start,N,p,width);
+					
+					// std::cout << "\t" << tmp_bindex << "  " << tmp_bindex * width + 1 << "  " << out[i] << std::endl;
+					++tmp_bindex;
+				}
+				previousBindex = tmp_bindex -1;
+			}
+			// exit(10);
+		
+		}
+		return out;
+	}
+
 	double Prior(double p)
 	{
 		if (p <= 0 || p >=1)

@@ -1,14 +1,17 @@
 #include "ChromosomeArray.h"
 
-ChromosomeArray::ChromosomeArray(int width)
+ChromosomeArray::ChromosomeArray(int sizeBinWidth, int positionBinCount)
 {
-	Width = width;
+	SizeBinWidth = sizeBinWidth;
+	PositionBinCount = positionBinCount;
+	PositionData.resize(PositionBinCount,0);
+
 }
 
 void ChromosomeArray::SyntheticInitalise(int length, double prob)
 {
 	UnbrokenLength = length;
-	MaximumBindex = (length)/Width-1;
+	MaximumBindex = (length)/SizeBinWidth-1;
 	// namespace model = simplemodel;
 	TotalCatches = 0;
 	int currentLength = 0;
@@ -23,15 +26,17 @@ void ChromosomeArray::SyntheticInitalise(int length, double prob)
 		// double p = model::BreakProbability(prob,i,currentLength,length);
 		if (r < prob)
 		{
-			IncrementCounter(currentLength);
+			LogSize(currentLength);
 			currentLength = 0;
 		}
 		pb.Update(i);
 	}
 	if (currentLength > 0)
 	{
-		IncrementCounter(currentLength);
+		LogSize(currentLength);
 	}
+	sort(SizeData.begin(), SizeData.end(), [](const BinCounter  & lhs, const  BinCounter & rhs) {
+     return lhs.Start < rhs.Start;});
 }
 
 void ChromosomeArray::FileInitialise(std::string file, int chromosome, int qualityThreshold)
@@ -44,7 +49,8 @@ void ChromosomeArray::FileInitialise(std::string file, int chromosome, int quali
 		lengths.push_back(length);
 	)
 	UnbrokenLength = lengths[chromosome - 1];
-	MaximumBindex = (UnbrokenLength)/Width-1;
+
+	MaximumBindex = (UnbrokenLength)/SizeBinWidth-1;
 	//extract all breaks associated with this chromosome
 	std::vector<BreakData> breaks;
 	forLineVectorIn(file,' ',
@@ -59,7 +65,6 @@ void ChromosomeArray::FileInitialise(std::string file, int chromosome, int quali
 	//sort the breaks based on their position in the unbroken chromosome - necessary because the datafile saves them in a slightly different order
 	sort(breaks.begin(), breaks.end(), [](const BreakData  & lhs, const  BreakData & rhs) { return lhs.SourcePosition< rhs.SourcePosition;});
 
-	int mL = 0;
 
 	int prevIdx = 0;
 	for (int i = 0; i < breaks.size(); ++i)
@@ -68,32 +73,27 @@ void ChromosomeArray::FileInitialise(std::string file, int chromosome, int quali
 		int length = newIdx - prevIdx;
 		if (length > 0)
 		{
-			IncrementCounter(length);
-			if (length > mL)
-			{
-				mL = length;
-				// std::cout << "new max length " << mL << std::endl;
-			}
+			LogSize(length);
 		}
 		prevIdx = newIdx;
 	}
 	int finalLength = lengths[chromosome - 1] - prevIdx;
 	if (finalLength > 0)
 	{
-		IncrementCounter(finalLength);
+		LogSize(finalLength);
 	}
-	if (finalLength > mL)
-	{
-		mL = finalLength;
-	}
-	std::cout << "\tThe largest chunk in chromosome " << chromosome << " has length " << mL << "  = " << 100*(double)mL/UnbrokenLength << "% of the total" << std::endl;
+
+
+	sort(SizeData.begin(), SizeData.end(), [](const BinCounter  & lhs, const  BinCounter & rhs) {
+     return lhs.Start < rhs.Start;});
+
 
 }
 
 
-void ChromosomeArray::IncrementCounter(int length)
+void ChromosomeArray::LogSize(int length)
 {
-	int bindex = (length-1)/Width;
+	int bindex = (length-1)/SizeBinWidth;
 	if (bindex >= DataIndex.size())
 	{
 		DataIndex.resize(bindex + 1,-1);
@@ -102,44 +102,47 @@ void ChromosomeArray::IncrementCounter(int length)
 	int relocate = DataIndex[bindex];
 	if (relocate != -1)
 	{
-		++Data[relocate].Count;
+		++SizeData[relocate].Count;
 	}
 	else
 	{
-		int binStart = bindex * Width + 1;
-		Data.push_back(BinCounter(binStart,binStart +Width-1,1));
-		DataIndex[bindex] = Data.size() - 1;
+		int binStart = bindex * SizeBinWidth + 1;
+		SizeData.push_back(BinCounter(binStart,binStart +SizeBinWidth-1,1));
+		DataIndex[bindex] = SizeData.size() - 1;
 
 		if (bindex == MaximumBindex)
 		{
 			std::cout << length << " is in bindex " << bindex << ", max is " << MaximumBindex << std::endl;
-			Data[Data.size()-1].isFinalBin = true;
+			SizeData[SizeData.size()-1].isFinalBin = true;
 		}
 	}
 	++TotalCatches;
 }
 
-double ChromosomeArray::Likelihood(double p)
+void ChromosomeArray::LogPosition(int position)
 {
-	return simplemodel::LogLikelihood(Data,p);
+	double pos = (double)position/UnbrokenLength;
+
+	int bin = pos * PositionBinCount;
+	++PositionData[bin];
 }
+
 UncertainValue ChromosomeArray::Optimise()
 {
-	return simplemodel::OptimalProbability(Data);
+	return simplemodel::OptimalProbability(SizeData);
 }
 
 VectorPair ChromosomeArray::BinCounts(bool relative_x)
 {
-	sort(Data.begin(), Data.end(), [](const BinCounter  & lhs, const  BinCounter & rhs) {
-     return lhs.Start < rhs.Start;});
-	VectorPair p = DecompileBinArray(Data);
+	
+	VectorPair p = DecompileBinArray(SizeData);
 
 	if (relative_x)
 	{
-	for (int i = 0; i < p.x.size(); ++i)
-	{
-		p.x[i]/=UnbrokenLength;
-	}
+		for (int i = 0; i < p.x.size(); ++i)
+		{
+			p.x[i]/=UnbrokenLength;
+		}
 	}
 	return p;
 }
