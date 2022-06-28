@@ -8,7 +8,7 @@
 #include "simpleProbability.h"
 
 
-void LengthAnalysis(ChunkArray & ca, int binWidth, bool coords, JSL::gnuplot & gp, std::string titleBase)
+void LengthAnalysis(ChromosomeArray & ca, int binWidth, bool coords, JSL::gnuplot & gp, std::string titleBase)
 {
 	namespace lp = JSL::LineProperties;
 	auto pp = ca.Optimise();
@@ -71,7 +71,7 @@ void LengthAnalysis(ChunkArray & ca, int binWidth, bool coords, JSL::gnuplot & g
 
 void SyntheticTest(int BinWidth, double ShatterProbability, int GenomeLength, bool RelativeCoords)
 {
-	ChunkArray ca(BinWidth);
+	ChromosomeArray ca(BinWidth);
 	ca.SyntheticInitalise(GenomeLength,ShatterProbability);
 
 
@@ -151,7 +151,7 @@ void RealTest(int binWidth, std::string file,bool coords, int quality)
 
 	for (int chromosome = 1; chromosome < 2; ++chromosome)
 	{
-		ChunkArray ca(binWidth);
+		ChromosomeArray ca(binWidth);
 		
 		ca.FileInitialise(file,chromosome,quality);
 		std::string base = "Chrom" + std::to_string(chromosome);

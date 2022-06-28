@@ -1,11 +1,11 @@
 #include "ChunkArray.h"
 
-ChunkArray::ChunkArray(int width)
+ChromosomeArray::ChromosomeArray(int width)
 {
 	Width = width;
 }
 
-void ChunkArray::SyntheticInitalise(int length, double prob)
+void ChromosomeArray::SyntheticInitalise(int length, double prob)
 {
 	UnbrokenLength = length;
 	MaximumBindex = (length)/Width-1;
@@ -34,7 +34,7 @@ void ChunkArray::SyntheticInitalise(int length, double prob)
 	}
 }
 
-void ChunkArray::FileInitialise(std::string file, int chromosome, int qualityThreshold)
+void ChromosomeArray::FileInitialise(std::string file, int chromosome, int qualityThreshold)
 {
 	//recover the total lengths of all chromosomes from file (inefficient to do every time, but only runs a few times)
 	std::vector<long int> lengths;
@@ -91,7 +91,7 @@ void ChunkArray::FileInitialise(std::string file, int chromosome, int qualityThr
 }
 
 
-void ChunkArray::IncrementCounter(int length)
+void ChromosomeArray::IncrementCounter(int length)
 {
 	int bindex = (length-1)/Width;
 	if (bindex >= DataIndex.size())
@@ -119,16 +119,16 @@ void ChunkArray::IncrementCounter(int length)
 	++TotalCatches;
 }
 
-double ChunkArray::Likelihood(double p)
+double ChromosomeArray::Likelihood(double p)
 {
 	return simplemodel::LogLikelihood(Data,p);
 }
-UncertainValue ChunkArray::Optimise()
+UncertainValue ChromosomeArray::Optimise()
 {
 	return simplemodel::OptimalProbability(Data);
 }
 
-VectorPair ChunkArray::BinCounts(bool relative_x)
+VectorPair ChromosomeArray::BinCounts(bool relative_x)
 {
 	sort(Data.begin(), Data.end(), [](const BinCounter  & lhs, const  BinCounter & rhs) {
      return lhs.Start < rhs.Start;});
