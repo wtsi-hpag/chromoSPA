@@ -6,7 +6,7 @@
 
 #include "ChromosomeArray.h"
 #include "simpleProbability.h"
-
+#include "model.h"
 
 void LengthAnalysis(ChromosomeArray & ca, int binWidth, bool coords, JSL::gnuplot & gp, std::string titleBase)
 {
@@ -115,7 +115,7 @@ int main(int argc, char ** argv)
 {
 
 	JSL::Argument<double> GenomeLength(100,"L",argc,argv);
-	JSL::Argument<double> ShatterProbability(0.001,"p",argc,argv);
+	JSL::Argument<double> ShatterProbability(0.1,"p",argc,argv);
 	JSL::Argument<int> seed(time(0),"s",argc,argv);
 	JSL::Argument<std::string> SourceFile("__null__","f",argc,argv);
 	JSL::Argument<int> BinWidth(1,"b",argc,argv);
@@ -126,7 +126,32 @@ int main(int argc, char ** argv)
 	
 	
 	// SyntheticTest(synthBins,ShatterProbability,GenomeLength,RelativeCoords,PositionBins);
-	RealTest(BinWidth,SourceFile,RelativeCoords,Quality,PositionBins);
-	
+	// RealTest(BinWidth,SourceFile,RelativeCoords,Quality,PositionBins);
+
+	ChromosomeArray ca(BinWidth,PositionBins);
+	ca.SyntheticInitalise(GenomeLength,ShatterProbability);	
+	UniformBreakModel m(GenomeLength);
+
+	JSL::Vector logp = JSL::Vector::linspace(-1.5,log10(0.4),100000);
+	JSL::Vector y(logp.Size());
+	JSL::Vector yy(logp.Size());
+	double maxY = -INT_MAX;
+	double maxY_p;
+	for (int i = 0; i < logp.Size(); ++i)
+	{
+		double p = pow(10,logp[i]);
+		y[i] = m.LogLikelihood(ca.SizeData,{p});
+		yy[i] = m.LogLikelihoodClever(ca.SizeData,{p});
+		if (y[i] > maxY)
+		{
+			maxY = y[i];
+			maxY_p = p;
+		}
+	}
+	std::cout << maxY_p << " was max prob " << std::endl;
+	JSL::gnuplot gp;
+	gp.Plot(power(10,logp),y);
+	gp.Plot(power(10,logp),yy);
+	gp.Show();
 	return 0;
 }

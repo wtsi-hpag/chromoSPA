@@ -20,8 +20,9 @@ class ChromosomeArray
 
 		VectorPair BinCounts(bool relativeX);
 		int UnbrokenLength;
-	private:
 		std::vector<BinCounter> SizeData;
+	private:
+		
 		std::vector<int> DataIndex;
 		std::vector<int> PositionData;
 
