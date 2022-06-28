@@ -1,4 +1,4 @@
-#include "ChunkArray.h"
+#include "ChromosomeArray.h"
 
 ChromosomeArray::ChromosomeArray(int width)
 {

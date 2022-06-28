@@ -4,7 +4,7 @@
 // #define GNUPLOT_NO_TIDY
 #include "JSL.h"
 
-#include "ChunkArray.h"
+#include "ChromosomeArray.h"
 #include "simpleProbability.h"
 
 
